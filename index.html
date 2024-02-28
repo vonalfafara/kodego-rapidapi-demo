@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      img {
+        height: 150px;
+        width: 100%;
+        object-fit: cover;
+      }
+      .card {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row my-3 row-gap-3">
+        <div class="col-sm-12 col-md-6 col-lg-3">
+          <select class="form-select" id="genresInput">
+            <option selected disabled>Select Genre</option>
+          </select>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-3">
+          <select class="form-select" id="titleTypesInput">
+            <option selected disabled>Select Title Type</option>
+          </select>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-3">
+          <input
+            class="form-control"
+            type="number"
+            placeholder="Choose Year Release"
+            min="1800"
+            max="2030"
+            id="yearReleaseInput"
+          />
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-3">
+          <select class="form-select" id="pageLimitInput">
+            <option selected disabled>Select Page Limit</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3" id="moviesContainer"></div>
+      <div class="row">
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            <li class="page-item">
+              <a class="page-link active" href="#" data-page="1">1</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="2">2</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="3">3</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="4">4</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="5">5</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="6">6</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="7">7</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="8">8</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="9">9</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="#" data-page="10">10</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+    <script>
+      const movieContainer = document.querySelector("#moviesContainer");
+      const genresInput = document.querySelector("#genresInput");
+      const titleTypesInput = document.querySelector("#titleTypesInput");
+      const yearReleaseInput = document.querySelector("#yearReleaseInput");
+      const pageLimitInput = document.querySelector("#pageLimitInput");
+      const pages = document.querySelectorAll(".page-link");
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      let genre = null;
+      let titleType = null;
+      let yearRelease = null;
+      let pageLimit = 10;
+      let page = 1;
+
+      // Adding Event Listener for the pagination items
+      pages.forEach((pageItem) => {
+        pageItem.addEventListener("click", function () {
+          pages.forEach((prevPage) => {
+            prevPage.classList.remove("active");
+          });
+          pageItem.classList.add("active");
+          page = pageItem.dataset.page;
+          getTitles();
+        });
+      });
+
+      // Event Listeners
+      genresInput.addEventListener("change", (e) => {
+        genre = e.target.value;
+        getTitles();
+      });
+
+      titleTypesInput.addEventListener("change", (e) => {
+        titleType = e.target.value;
+        getTitles();
+      });
+
+      yearReleaseInput.addEventListener("keydown", (e) => {
+        if (e.keyCode === 13) {
+          yearRelease = e.target.value;
+          console.log(yearRelease);
+          getTitles();
+        }
+      });
+
+      pageLimitInput.addEventListener("change", (e) => {
+        pageLimit = e.target.value;
+        getTitles();
+      });
+
+      // Get List of Options
+      async function getOptions(url, selectElement) {
+        const response = await fetch(url, {
+          headers: {
+            "X-RapidAPI-Key":
+              "b9f377de43msh10628aacb321df0p1be870jsn29f9c84e4616",
+            "X-RapidAPI-Host": "moviesdatabase.p.rapidapi.com",
+          },
+        });
+        const data = await response.json();
+        const options = data.results.filter((option) => option);
+
+        options.forEach((option) => {
+          const optionItem = document.createElement("option");
+          optionItem.value = option;
+          optionItem.innerText = option;
+          selectElement.append(optionItem);
+        });
+      }
+
+      // Get Movies
+      async function getTitles() {
+        let url = "https://moviesdatabase.p.rapidapi.com/titles";
+        url += "?page=" + page;
+        url += "&limit=" + pageLimit;
+        if (genre) url += "&genre=" + genre;
+        if (titleType) url += "&titleType=" + titleType;
+        if (yearRelease) url += "&year=" + yearRelease;
+        const response = await fetch(url, {
+          headers: {
+            "X-RapidAPI-Key":
+              "b9f377de43msh10628aacb321df0p1be870jsn29f9c84e4616",
+            "X-RapidAPI-Host": "moviesdatabase.p.rapidapi.com",
+          },
+        });
+        const data = await response.json();
+
+        movieContainer.innerHTML = "";
+
+        data.results.forEach((movie) => {
+          let column = document.createElement("div");
+          column.classList.add("col-sm-12");
+          column.classList.add("col-md-6");
+          column.classList.add("col-lg-3");
+          column.classList.add("my-3");
+
+          let card = document.createElement("div");
+          card.classList.add("card");
+
+          let moviePoster = document.createElement("img");
+          moviePoster.classList.add("card-img-top");
+
+          if (movie.primaryImage) {
+            moviePoster.src = movie.primaryImage.url;
+          } else {
+            moviePoster.src = "./dog.jpg";
+          }
+
+          let cardBody = document.createElement("div");
+          cardBody.classList.add("card-body");
+
+          let cardTitle = document.createElement("h5");
+          cardTitle.classList.add("card-title");
+
+          cardTitle.innerText = movie.titleText.text;
+
+          let yearRelease = document.createElement("p");
+          yearRelease.classList.add("card-text");
+
+          let titleType = document.createElement("p");
+          titleType.classList.add("card-text");
+
+          if (
+            movie.releaseDate &&
+            movie.releaseDate.day &&
+            movie.releaseDate.month
+          ) {
+            date =
+              months[movie.releaseDate.month - 1] +
+              " " +
+              movie.releaseDate.day +
+              ", " +
+              movie.releaseDate.year;
+          } else {
+            date = movie.releaseYear.year;
+          }
+
+          titleType.innerText = "Type: " + movie.titleType.text;
+          yearRelease.innerText = "Release Date: " + date;
+
+          cardBody.append(cardTitle, titleType, yearRelease);
+          card.append(moviePoster, cardBody);
+          column.append(card);
+          movieContainer.append(column);
+        });
+      }
+
+      getOptions(
+        "https://moviesdatabase.p.rapidapi.com/titles/utils/genres",
+        genresInput
+      );
+      getOptions(
+        "https://moviesdatabase.p.rapidapi.com/titles/utils/titleTypes",
+        titleTypesInput
+      );
+      getTitles();
+    </script>
+  </body>
+</html>
